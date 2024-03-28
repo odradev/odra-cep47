@@ -3,5 +3,6 @@
 extern crate alloc;
 
 pub mod cep47;
+mod cep47_tests;
 pub mod data;
 pub mod events;

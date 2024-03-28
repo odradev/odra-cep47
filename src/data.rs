@@ -79,35 +79,35 @@ impl OwnedTokens {
     }
 
     pub fn set_token(&mut self, owner: Address, value: TokenId) {
-        let length = self.get_balances(owner.clone());
-        self.indexes.set(&(owner.clone(), value), Some(length));
-        self.tokens.set(&(owner.clone(), length), Some(value));
+        let length = self.get_balances(owner);
+        self.indexes.set(&(owner, value), Some(length));
+        self.tokens.set(&(owner, length), Some(value));
         self.set_balances(owner, length.add(1));
     }
 
     pub fn remove_token(&mut self, owner: Address, value: TokenId) {
-        let length = self.get_balances(owner.clone());
+        let length = self.get_balances(owner);
         let index = self
-            .get_index_by_token(owner.clone(), value)
+            .get_index_by_token(owner, value)
             .unwrap_or_revert(&self.env());
         match length.cmp(&(index + 1)) {
             Ordering::Equal => {
-                self.tokens.set(&(owner.clone(), index), None);
-                self.set_token(owner, length.sub(1))
+                self.tokens.set(&(owner, length.sub(1)), None);
+                self.set_balances(owner, length.sub(1));
             }
             Ordering::Greater => {
                 let last = self
-                    .get_token_by_index(owner.clone(), length.sub(1))
+                    .get_token_by_index(owner, length.sub(1))
                     .unwrap_or_revert(&self.env());
-                self.indexes.set(&(owner.clone(), last), Some(index));
-                self.tokens.set(&(owner.clone(), index), Some(last));
-                self.tokens.set(&(owner.clone(), length.sub(1)), None);
+                self.indexes.set(&(owner, last), Some(index));
+                self.tokens.set(&(owner, index), Some(last));
+                self.tokens.set(&(owner, length.sub(1)), None);
                 self.set_balances(owner, length.sub(1));
             }
             Ordering::Less => {}
         }
 
-        self.indexes.set(&(owner.clone(), value), None);
+        self.indexes.set(&(owner, value), None);
     }
 }
 

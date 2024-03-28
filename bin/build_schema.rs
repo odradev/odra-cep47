@@ -1,6 +1,6 @@
 #![doc = "Binary for building schema definitions from odra contracts."]
 #[allow(unused_imports)]
-use dummy_cep47;
+use odra_cep47;
 
 #[cfg(not(target_arch = "wasm32"))]
 extern "Rust" {

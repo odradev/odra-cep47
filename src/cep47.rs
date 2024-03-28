@@ -6,13 +6,10 @@ use odra::{Address, OdraError, OdraType, SubModule, Var};
 use crate::data::{Allowances, Metadata, OwnedTokens, Owners};
 use crate::events::*;
 
-const NAME: &str = "DragonsNFT";
-const SYMBOL: &str = "DGNFT";
-
 pub type Meta = BTreeMap<String, String>;
 pub type TokenId = U256;
 
-#[derive(OdraError, OdraType)]
+#[derive(OdraError, OdraType, PartialEq, Debug)]
 pub enum Error {
     PermissionDenied = 1,
     WrongArguments = 2,
@@ -73,7 +70,7 @@ impl Cep47 {
             return Err(Error::TokenIdDoesNotExist);
         }
 
-        self.metadata.set(token_id.clone(), meta);
+        self.metadata.set(token_id, meta);
 
         self.env().emit_event(MetadataUpdate { token_id });
         Ok(())
@@ -106,8 +103,8 @@ impl Cep47 {
         }
 
         for (token_id, token_meta) in token_ids.iter().zip(&token_metas) {
-            self.metadata.set(token_id.clone(), token_meta.clone());
-            self.owners.set(token_id.clone(), recipient);
+            self.metadata.set(*token_id, token_meta.clone());
+            self.owners.set(*token_id, recipient);
             self.owned_tokens.set_token(recipient, *token_id);
         }
 
@@ -273,93 +270,5 @@ impl Cep47 {
         }
 
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use alloc::string::ToString;
-
-    use odra::casper_types::U256;
-    use odra::host::{Deployer, HostEnv};
-    use odra::Address;
-
-    use crate::cep47::{Cep47HostRef, Cep47InitArgs, TokenId, NAME, SYMBOL};
-
-    #[test]
-    fn test_deploy() {
-        let (_, token, _) = deploy();
-        assert_eq!(token.name(), NAME);
-        assert_eq!(token.symbol(), SYMBOL);
-        assert_eq!(token.meta(), meta::contract_meta());
-        assert_eq!(token.total_supply(), U256::zero());
-    }
-
-    #[test]
-    fn test_token_meta() {
-        let (env, token, owner) = deploy();
-        let user = env.get_account(1);
-        let token_id = TokenId::zero();
-        let token_meta = meta::red_dragon();
-
-        token.mint_one(owner, user, token_id, token_meta.clone());
-
-        let user_token_meta = token.token_meta(token_id);
-        assert_eq!(user_token_meta.unwrap(), token_meta);
-
-        let first_user_token = token.get_token_by_index(user, U256::zero());
-        assert_eq!(first_user_token, Some(token_id));
-    }
-
-    fn deploy() -> (HostEnv, Cep47HostRef, Address) {
-        let env = odra_test::env();
-        let owner = env.get_account(0);
-        let token = Cep47HostRef::deploy(
-            &env,
-            Cep47InitArgs {
-                name: NAME.to_string(),
-                symbol: SYMBOL.to_string(),
-                meta: meta::contract_meta(),
-            },
-        );
-
-        (env, token, owner)
-    }
-
-    mod meta {
-        use alloc::collections::BTreeMap;
-        use alloc::string::ToString;
-
-        use crate::cep47::Meta;
-
-        pub fn contract_meta() -> Meta {
-            let mut meta = BTreeMap::new();
-            meta.insert("origin".to_string(), "fire".to_string());
-            meta
-        }
-
-        pub fn red_dragon() -> Meta {
-            let mut meta = BTreeMap::new();
-            meta.insert("color".to_string(), "red".to_string());
-            meta
-        }
-
-        pub fn blue_dragon() -> Meta {
-            let mut meta = BTreeMap::new();
-            meta.insert("color".to_string(), "blue".to_string());
-            meta
-        }
-
-        pub fn black_dragon() -> Meta {
-            let mut meta = BTreeMap::new();
-            meta.insert("color".to_string(), "black".to_string());
-            meta
-        }
-
-        pub fn gold_dragon() -> Meta {
-            let mut meta = BTreeMap::new();
-            meta.insert("color".to_string(), "gold".to_string());
-            meta
-        }
     }
 }

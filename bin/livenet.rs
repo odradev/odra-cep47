@@ -1,4 +1,4 @@
-use dummy_cep47::cep47::Cep47HostRef;
+use dummy_cep47::cep47::{Cep47HostRef, Cep47InitArgs};
 use odra::casper_types::U256;
 use odra::host::{Deployer, HostEnv, HostRef, HostRefLoader, NoArgs};
 use odra::Address;
@@ -12,8 +12,14 @@ fn main() {
     // let recipient = Address::from_str(recipient).unwrap();
 
     // Deploy new contract.
-    let mut cep47 = deploy_new(&env);
+    let mut cep47 = _load(&env);
     println!("contract address: {}", cep47.address().to_string());
+
+    // Mint a token.
+    let token_id = U256::from(2);
+    env.set_gas(3_000_000_000u64);
+    let tokens = cep47.mint(owner, vec![token_id], vec![Default::default()]);
+    println!("Minted tokens: {:?}", tokens.unwrap_or_default());
 
     // // Uncomment to load existing contract.
     // let mut cep47 = _load(&env);
@@ -29,11 +35,16 @@ fn main() {
 
 fn deploy_new(env: &HostEnv) -> Cep47HostRef {
     env.set_gas(400_000_000_000u64);
-    Cep47HostRef::deploy(env, NoArgs)
+    let args = Cep47InitArgs {
+        name: "PlasNFT".to_string(),
+        symbol: "PLS".to_string(),
+        meta: Default::default(),
+    };
+    Cep47HostRef::deploy(env, args)
 }
 
 fn _load(env: &HostEnv) -> Cep47HostRef {
-    let address = "hash-d26fcbd2106e37be975d2045c580334a6d7b9d0a241c2358a4db970dfd516945";
+    let address = "hash-8964243df4742ba8d811691f2b046dbc2f05fefa19f8675146f534080dcfc167";
     let address = Address::from_str(address).unwrap();
     Cep47HostRef::load(env, address)
 }

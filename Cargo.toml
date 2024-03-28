@@ -1,5 +1,5 @@
 [package]
-name = "dummy_cep47"
+name = "odra_cep47"
 version = "0.1.0"
 edition = "2021"
 
@@ -24,12 +24,12 @@ required-features = ["livenet"]
 test = false
 
 [[bin]]
-name = "dummy_cep47_build_contract"
+name = "odra_cep47_build_contract"
 path = "bin/build_contract.rs"
 test = false
 
 [[bin]]
-name = "dummy_cep47_build_schema"
+name = "odra_cep47_build_schema"
 path = "bin/build_schema.rs"
 test = false
 

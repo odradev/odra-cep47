@@ -1,31 +1,34 @@
-# dummy_cep47
+# CEP-47 implementation using using Odra Framework
+
+This implementation is based on the original [CEP-47](https://github.com/casper-ecosystem/casper-nft-cep47) code.
 
 ## Usage
-It's recommended to install 
+It's required to install 
 [cargo-odra](https://github.com/odradev/cargo-odra) first.
 
 ### Build
 
+```bash
+cargo odra build
 ```
-$ cargo odra build
-```
-To build a wasm file, you need to pass the -b parameter. 
 The result files will be placed in `${project-root}/wasm` directory.
 
-```
-$ cargo odra build -b casper
+### Tests
+To run tests using OdraVM on your local machine, execute:
+
+```bash
+cargo odra test
 ```
 
-### Test
-To run test on your local machine, you can basically execute the command:
+To test actual wasm files against a CasperVM backend, 
+you need to specify the backend passing -b argument to `cargo-odra`:
 
-```
-$ cargo odra test
+```bash
+cargo odra test -b casper
 ```
 
-To test actual wasm files against a backend, 
-you need to specify the backend passing -b argument to `cargo-odra`.
+To run livenet test suite, first set up the `.env` file, build wasm files and run:
 
-```
-$ cargo odra test -b casper
+```bash
+cargo run --bin livenet --features livenet
 ```
