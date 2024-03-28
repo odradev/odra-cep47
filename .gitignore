@@ -1,4 +1,6 @@
 .idea
+.keys
+.env
 .vscode
 /target
 Cargo.lock

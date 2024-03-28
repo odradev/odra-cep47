@@ -13,7 +13,7 @@ fn main() {
 
     // Deploy new contract.
     let mut cep47 = deploy_new(&env);
-    // println!("contract address: {}", cep47.address().to_string());
+    println!("contract address: {}", cep47.address().to_string());
 
     // // Uncomment to load existing contract.
     // let mut cep47 = _load(&env);
@@ -28,7 +28,7 @@ fn main() {
 }
 
 fn deploy_new(env: &HostEnv) -> Cep47HostRef {
-    env.set_gas(100_000_000_000u64);
+    env.set_gas(400_000_000_000u64);
     Cep47HostRef::deploy(env, NoArgs)
 }
 
