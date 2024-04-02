@@ -1,8 +1,10 @@
-use dummy_cep47::cep47::{Cep47HostRef, Cep47InitArgs};
-use odra::casper_types::U256;
-use odra::host::{Deployer, HostEnv, HostRef, HostRefLoader, NoArgs};
-use odra::Address;
 use std::str::FromStr;
+
+use odra::Address;
+use odra::casper_types::U256;
+use odra::host::{Deployer, HostEnv, HostRef, HostRefLoader};
+
+use odra_cep47::cep47::{Cep47HostRef, Cep47InitArgs};
 
 fn main() {
     let env = odra_casper_livenet_env::env();
@@ -12,7 +14,7 @@ fn main() {
     // let recipient = Address::from_str(recipient).unwrap();
 
     // Deploy new contract.
-    let mut cep47 = _load(&env);
+    let mut cep47 = deploy_new(&env);
     println!("contract address: {}", cep47.address().to_string());
 
     // Mint a token.
@@ -34,7 +36,7 @@ fn main() {
 }
 
 fn deploy_new(env: &HostEnv) -> Cep47HostRef {
-    env.set_gas(400_000_000_000u64);
+    env.set_gas(250_000_000_000u64);
     let args = Cep47InitArgs {
         name: "PlasNFT".to_string(),
         symbol: "PLS".to_string(),

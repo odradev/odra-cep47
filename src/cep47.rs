@@ -1,15 +1,13 @@
-use crate::cep47::Error::{NameNotSet, SymbolNotSet, WrongArguments};
+use odra::{Address, SubModule, Var};
 use odra::casper_types::U256;
 use odra::prelude::*;
-use odra::{Address, OdraError, OdraType, SubModule, Var};
-
 use crate::data::{Allowances, Metadata, OwnedTokens, Owners};
 use crate::events::*;
 
 pub type Meta = BTreeMap<String, String>;
 pub type TokenId = U256;
 
-#[derive(OdraError, OdraType, PartialEq, Debug)]
+#[odra::odra_type]
 pub enum Error {
     PermissionDenied = 1,
     WrongArguments = 2,
@@ -18,8 +16,9 @@ pub enum Error {
     SymbolNotSet = 10,
     NameNotSet = 11,
 }
+impl From<Error> for odra::OdraError { fn from(error: Error) -> Self { odra::OdraError::user(error as u16) } }
 
-#[odra::module(events = [Mint])]
+#[odra::module(events = [Mint], errors = Error)]
 pub struct Cep47 {
     pub name: Var<String>,
     pub symbol: Var<String>,
@@ -45,10 +44,10 @@ impl Cep47 {
     }
 
     pub fn name(&self) -> String {
-        self.name.get_or_revert_with(NameNotSet)
+        self.name.get_or_revert_with(Error::NameNotSet)
     }
     pub fn symbol(&self) -> String {
-        self.symbol.get_or_revert_with(SymbolNotSet)
+        self.symbol.get_or_revert_with(Error::SymbolNotSet)
     }
     pub fn meta(&self) -> BTreeMap<String, String> {
         self.meta.get_or_default()
@@ -111,10 +110,17 @@ impl Cep47 {
         let minted_tokens_count: U256 = From::<u64>::from(token_ids.len().try_into().unwrap());
         self.total_supply.add(minted_tokens_count);
 
-        self.env().emit_event(Mint {
+        let mint_event = Mint {
             recipient,
             token_ids: token_ids.clone(),
-        });
+        };
+
+        self.env().emit_event(&mint_event);
+
+        #[cfg(target_arch = "wasm32")]
+        {
+            mint_event.emit(&self.env());
+        }
 
         Ok(token_ids)
     }
@@ -144,7 +150,7 @@ impl Cep47 {
         let caller = self.env().caller();
         for token_id in &token_ids {
             match self.owner_of(*token_id) {
-                None => return Err(WrongArguments),
+                None => return Err(Error::WrongArguments),
                 Some(owner) if owner != caller => return Err(Error::PermissionDenied),
                 Some(_) => self.allowances.set(caller, *token_id, spender),
             }
@@ -163,7 +169,7 @@ impl Cep47 {
         let caller = self.env().caller();
         for token_id in &token_ids {
             match self.owner_of(*token_id) {
-                None => return Err(WrongArguments),
+                None => return Err(Error::WrongArguments),
                 Some(owner) if owner != caller => return Err(Error::PermissionDenied),
                 Some(_) => self.allowances.remove(caller, *token_id),
             }

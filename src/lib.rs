@@ -6,3 +6,5 @@ pub mod cep47;
 mod cep47_tests;
 pub mod data;
 pub mod events;
+#[cfg(target_arch = "wasm32")]
+mod legacy_events;
