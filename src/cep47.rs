@@ -1,8 +1,13 @@
-use odra::{Address, SubModule, Var};
+//! CEP-47 module for the Odra smart contracts.
 use odra::casper_types::U256;
 use odra::prelude::*;
+use odra::{Address, SubModule, Var};
+
 use crate::data::{Allowances, Metadata, OwnedTokens, Owners};
-use crate::events::*;
+#[cfg(target_arch = "wasm32")]
+use crate::events::{Approve, Burn, MetadataUpdate, Mint, Revoke, Transfer};
+#[cfg(target_arch = "wasm32")]
+use odra::casper_types::Key;
 
 pub type Meta = BTreeMap<String, String>;
 pub type TokenId = U256;
@@ -15,10 +20,15 @@ pub enum Error {
     TokenIdDoesNotExist = 4,
     SymbolNotSet = 10,
     NameNotSet = 11,
+    InternalError = 401,
 }
-impl From<Error> for odra::OdraError { fn from(error: Error) -> Self { odra::OdraError::user(error as u16) } }
+impl From<Error> for odra::OdraError {
+    fn from(error: Error) -> Self {
+        odra::OdraError::user(error as u16)
+    }
+}
 
-#[odra::module(events = [Mint], errors = Error)]
+#[odra::module(errors = Error)]
 pub struct Cep47 {
     pub name: Var<String>,
     pub symbol: Var<String>,
@@ -71,7 +81,12 @@ impl Cep47 {
 
         self.metadata.set(token_id, meta);
 
-        self.env().emit_event(MetadataUpdate { token_id });
+        #[cfg(target_arch = "wasm32")]
+        {
+            let metadata_update = MetadataUpdate { token_id };
+            metadata_update.emit(&self.env());
+        }
+
         Ok(())
     }
 
@@ -110,15 +125,12 @@ impl Cep47 {
         let minted_tokens_count: U256 = From::<u64>::from(token_ids.len().try_into().unwrap());
         self.total_supply.add(minted_tokens_count);
 
-        let mint_event = Mint {
-            recipient,
-            token_ids: token_ids.clone(),
-        };
-
-        self.env().emit_event(&mint_event);
-
         #[cfg(target_arch = "wasm32")]
         {
+            let mint_event = Mint {
+                recipient: Key::from_formatted_str(&recipient.to_string()).unwrap(),
+                token_ids: token_ids.clone(),
+            };
             mint_event.emit(&self.env());
         }
 
@@ -156,11 +168,15 @@ impl Cep47 {
             }
         }
 
-        self.env().emit_event(Approve {
-            owner: caller,
-            spender,
-            token_ids,
-        });
+        #[cfg(target_arch = "wasm32")]
+        {
+            let approve_event = Approve {
+                owner: Key::from_formatted_str(&caller.to_string()).unwrap(),
+                spender: Key::from_formatted_str(&spender.to_string()).unwrap(),
+                token_ids: token_ids.clone(),
+            };
+            approve_event.emit(&self.env());
+        }
 
         Ok(())
     }
@@ -175,10 +191,15 @@ impl Cep47 {
             }
         }
 
-        self.env().emit_event(Revoke {
-            owner: caller,
-            token_ids,
-        });
+        #[cfg(target_arch = "wasm32")]
+        {
+            let revoke_event = Revoke {
+                owner: Key::from_formatted_str(&caller.to_string()).unwrap(),
+                token_ids: token_ids.clone(),
+            };
+
+            revoke_event.emit(&self.env());
+        }
 
         Ok(())
     }
@@ -231,7 +252,16 @@ impl Cep47 {
 
         let burnt_tokens_count = U256::from(token_ids.len() as u64);
         self.total_supply.subtract(burnt_tokens_count);
-        self.env().emit_event(Burn { owner, token_ids });
+
+        #[cfg(target_arch = "wasm32")]
+        {
+            let burn_event = Burn {
+                owner: Key::from_formatted_str(&owner.to_string()).unwrap(),
+                token_ids: token_ids.clone(),
+            };
+            burn_event.emit(&self.env());
+        }
+
         Ok(())
     }
 
@@ -249,11 +279,16 @@ impl Cep47 {
             self.owners.set(*token_id, recipient);
         }
 
-        self.env().emit_event(Transfer {
-            from: owner,
-            to: recipient,
-            token_ids,
-        });
+        #[cfg(target_arch = "wasm32")]
+        {
+            let transfer_event = Transfer {
+                from: Key::from_formatted_str(&owner.to_string()).unwrap(),
+                to: Key::from_formatted_str(&recipient.to_string()).unwrap(),
+                token_ids: token_ids.clone(),
+            };
+            transfer_event.emit(&self.env());
+        }
+
         Ok(())
     }
 

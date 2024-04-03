@@ -6,28 +6,7 @@
   "homepage": null,
   "contract_name": "Cep47",
   "contract_version": "0.1.0",
-  "types": [
-    {
-      "struct": {
-        "name": "Mint",
-        "description": null,
-        "members": [
-          {
-            "name": "recipient",
-            "description": null,
-            "ty": "Key"
-          },
-          {
-            "name": "token_ids",
-            "description": null,
-            "ty": {
-              "List": "U256"
-            }
-          }
-        ]
-      }
-    }
-  ],
+  "types": [],
   "errors": [],
   "entry_points": [
     {
@@ -492,12 +471,7 @@
       "access": "public"
     }
   ],
-  "events": [
-    {
-      "name": "Mint",
-      "ty": "Mint"
-    }
-  ],
+  "events": [],
   "call": {
     "wasm_file_name": "Cep47.wasm",
     "description": "",

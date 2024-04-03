@@ -1,3 +1,4 @@
+//! Data module for CEP-47 implementation.
 use core::cmp::Ordering;
 use core::ops::{Add, Sub};
 
